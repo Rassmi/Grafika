@@ -83,9 +83,9 @@ function animate1() {
       ctx.closePath();
 	  ctx.stroke();
 	  
-	  ctx.translate((1 - t) * 0 + 250 * t, (1 - t) * 0 + 0 * t)
+	  ctx.translate((1 - t) * 0 + 250 * t, (1 - t) * 0 + 250 * t)
 	  ctx.scale((1 - t) * 1 + 0.5 * t, (1 - t) * 1 +  0.5 * t);
-	  ctx.rotate(((1 - t) * 0 + t * Math.PI)*0.5 );
+	  ctx.rotate((1 - t) * 0 + t * -Math.PI);
 	  
       drawF(0);
       ctx.restore();

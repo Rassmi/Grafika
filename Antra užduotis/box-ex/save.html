@@ -1,0 +1,304 @@
+
+<head>
+    <title>Pragaro laiptai</title>
+    <script type="text/javascript" src="../libs/three.js"></script>
+    <script type="text/javascript" src="../libs/jquery-1.9.0.js"></script>
+    <script type="text/javascript" src="../libs/TrackballControls.js"></script>
+    <script type="text/javascript" src="../libs/stats.js"></script>
+    <script type="text/javascript" src="../libs/dat.gui.js"></script>
+    <style>
+        body{
+            /* set margin to 0 and overflow to hidden, to go fullscreen */
+            margin: 0;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Div which will hold the Output -->
+<div id="WebGL-output">
+</div>
+
+<!-- Javascript code that runs our Three.js examples -->
+<script type="text/javascript">
+
+    // once everything is loaded, we run our Three.js stuff.
+    $(function () {
+
+        // create a scene, that will hold all our elements such as objects, cameras and lights.
+        var scene = new THREE.Scene();
+
+        // create a camera, which defines where we're looking at.
+        var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+
+        // create a render and set the size
+        var renderer = new THREE.WebGLRenderer();
+
+        renderer.setClearColor(0xEEEEEE, 1.0);
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMapEnabled = true;
+        
+        // axes helper
+       // var axes = new THREE.AxisHelper( 20 );
+       // scene.add(axes);
+        
+
+        // create the ground plane
+        var planeGeometry = new THREE.PlaneGeometry(60,20);
+        var planeMaterial =    new THREE.MeshLambertMaterial({color: 0xffffff});
+        var plane = new THREE.Mesh(planeGeometry,planeMaterial);
+        plane.receiveShadow  = true;
+
+        // rotate and position the plane
+        plane.rotation.x=-0.5*Math.PI;
+		plane.rotation.z=-0.5*Math.PI;
+        plane.position.x=0
+        plane.position.y=0
+        plane.position.z=0
+
+        // add the plane to the scene
+        scene.add(plane);
+		
+		var options = {
+			stairsNmbr: 8,
+			curve: 0,
+			position: {
+				x: 0,
+				z: 0,
+				}
+		}
+
+
+		function Stairs (){
+			// create stairs
+			var widthS = 5;
+			var hightS = 0.25;
+			var depthS = 2.5;
+			
+				//Create a frame shape..
+			const kairys = new THREE.Shape();
+			kairys.moveTo( 0,0 );
+			kairys.lineTo( 0, -2.5 );
+			kairys.lineTo( 5, -2.5 );
+			kairys.lineTo( 5, -1.25 );
+			kairys.lineTo( 4, -0.7 );
+			kairys.lineTo( 3, -0.3 );
+			kairys.lineTo( 2, -0.1 );
+			kairys.lineTo( 0, 0 );
+
+			const desinys = new THREE.Shape();
+			desinys.moveTo( 0,0 );
+			desinys.lineTo( 0, -2.5 );
+			desinys.lineTo( -5, -2.5 );
+			desinys.lineTo( -5, -1.25 );
+			desinys.lineTo( -4, -0.7 );
+			desinys.lineTo( -3, -0.3 );
+			desinys.lineTo( -2, -0.1 );
+			desinys.lineTo( 0, 0 );
+
+
+				//Extrude the shape into a geometry, and create a mesh from it:
+			const extrudeSettings = {
+				steps: 1,
+				depth: 0.5,
+				bevelEnabled: false,
+				bevelThickness: 0.5,
+				bevelSize: 1,
+				bevelOffset: 1,
+				bevelSegments: 1
+			};	
+			
+			var kairysLaiptas = new THREE.ExtrudeGeometry(kairys, extrudeSettings);
+			var desinysLaiptas = new THREE.ExtrudeGeometry(desinys, extrudeSettings);
+			var stairMaterial = new THREE.MeshLambertMaterial({ color: 0xffc68c });
+			
+			//var kairysL = new THREE.Mesh(geom, stairMaterial);
+			//kairysL.rotation.x = Math.PI/2;
+
+			//scene.add(kairysL);
+			
+			for (i = 1; i < options.stairsNmbr; i++) { 
+				if (i%2 == 1){ 
+					var kairysL = new THREE.Mesh(kairysLaiptas, stairMaterial);
+					kairysL.rotation.x = Math.PI/2;
+					kairysL.castShadow = true;
+					kairysL.position.y = (hightS + 2) * i + 0.4;
+					kairysL.position.x = -2.5 + hightS + options.position.x;
+					kairysL.position.z = (-1.5 * i) + depthS + 1.5 + options.position.z;
+					//kairysL.rotation.z = i * options.curve / options.stairsNmbr ;
+					scene.add(kairysL);
+				}
+				else{
+					var desinysL = new THREE.Mesh(desinysLaiptas, stairMaterial);
+					desinysL.rotation.x = Math.PI/2;
+					desinysL.castShadow = true;
+					desinysL.position.y = (hightS + 2) * i + 0.4;
+					desinysL.position.x = 2.5 + hightS + options.position.x;
+					desinysL.position.z = (-1.5 * i) + depthS + 1.5 + options.position.z;
+					//desinysL.rotation.z = i*options.curve / options.stairsNmbr;
+					scene.add(desinysL);
+				} 
+			}
+			
+			// create the ground plane
+
+			var secondF = new THREE.Mesh(new THREE.PlaneGeometry(10,5),new THREE.MeshLambertMaterial({color: 0xffff00}));
+			secondF.receiveShadow  = true;
+
+			// rotate and position the plane
+			secondF.rotation.x=-0.5*Math.PI;
+			secondF.position.x= 2.5 + hightS + options.position.x - 2.5;
+			secondF.position.y= (hightS + 2) * ((options.stairsNmbr- options.stairsNmbr%1) - 1) + 0.4;
+			secondF.position.z= (-1.5 * (options.stairsNmbr- options.stairsNmbr%1)) + depthS  -2 + options.position.z;
+			
+			scene.add(secondF);
+			
+			// create stair supports
+			var width_sup = 0.8;
+			var hight_sup = 0.4;
+			var depth_sup = 2;
+			
+			var supGeometry = new THREE.BoxGeometry(width_sup,hight_sup,depth_sup);
+			var supMaterial = new THREE.MeshPhongMaterial({color: 0xd0d0d0});
+			
+			//stair support
+			for (i = 1; i < options.stairsNmbr-1; i++) { 
+				sup = new THREE.Mesh(supGeometry, supMaterial);
+				sup.castShadow = true;
+				sup.position.y = (hightS + 2) * i - hightS;
+				sup.position.x = options.position.x;
+				sup.position.z = (-1.5 * i) + depth_sup -0.1 + options.position.z;
+				sup.rotation.y = 0,5 * Math.PI;
+				scene.add(sup);
+			}
+			
+			//create handle
+			
+			 var curve1 = new THREE.SplineCurve3( [
+				new THREE.Vector3( 1, hightS + 2, hightS + 2 ),
+				new THREE.Vector3( 1, hightS + 2, hightS + 2 ),
+				new THREE.Vector3( 1, 0, hightS + 2 ),
+				new THREE.Vector3( 1, hightS + 2, hightS + 2 ),
+				new THREE.Vector3( 1, hightS + 2, hightS + 2 )
+			] );
+			
+			
+			var handleGeometry = new THREE.TubeGeometry( curve1, 64, 0.4, 12, false)  //path, segment, spindulys, radius segments, closed
+			var handleMaterial = new THREE.MeshPhongMaterial({color: 0xd0d0d0});
+			//var handleMaterial = new THREE.MeshBasicMaterial( {PhongMaterial});
+			
+			for (i = 0; i < options.stairsNmbr - 1; i++) { 
+				var handle = new THREE.Mesh(handleGeometry, handleMaterial);
+				handle.position.y = (hightS + 2) * i - hightS;
+				handle.position.z = (-1.5 * i) - depth_sup/2 + options.position.z;
+				handle.position.x = -0.2 - width_sup + options.position.x;
+				scene.add(handle);
+			}
+			
+			var curve2 = new THREE.SplineCurve3( [  // x, z, length ?
+				new THREE.Vector3( -1, 6, 0 ),
+				new THREE.Vector3( -1, 0, 0 ),
+				
+				
+				new THREE.Vector3( -Math.sqrt(2+Math.sqrt(3))/2, -Math.sqrt(2-Math.sqrt(3))/2, 0 ),
+				new THREE.Vector3( -Math.sqrt(3)/2, -1/2, 0 ),
+				new THREE.Vector3( -Math.sqrt(2)/2, -Math.sqrt(2)/2, 0 ),
+				new THREE.Vector3( -1/2, -Math.sqrt(3)/2, 0 ),
+				new THREE.Vector3( -Math.sqrt(2-Math.sqrt(3))/2, -Math.sqrt(2+Math.sqrt(3))/2, 0 ),
+				
+				
+				new THREE.Vector3( 0, -1, 0 ),
+				new THREE.Vector3( 0.5, -1, 0 ),
+				new THREE.Vector3( 0.5, -0.9, 0 ),
+				new THREE.Vector3( 0.5, -0.8, 0 ),
+				new THREE.Vector3( 0.5, -0.7, 0 ),
+				new THREE.Vector3( 0.5, -0.6, 0 ),
+				new THREE.Vector3( 0.5, -0.5, 0 )
+			] );
+			
+			var handleRailSupportGeometry = new THREE.TubeGeometry( curve2, 64, 0.15, 12, false)  //path, segment, spindulys, radius segments, closed
+			var handleRailSupportMaterial = new THREE.MeshPhongMaterial({color: 0xd0d0d0});
+			
+			for (i = 1; i < options.stairsNmbr; i++) { 
+				if (i%2 ==1){
+					var handleSupport = new THREE.Mesh(handleRailSupportGeometry, handleRailSupportMaterial);
+					handleSupport.position.y = (hightS + 2) * i - hightS + 0.7;
+					handleSupport.position.z = (-1.5 * i) + depth_sup + 0.6 + options.position.z;
+					handleSupport.position.x = -1.2 - width_sup + options.position.x;
+					scene.add(handleSupport);
+				}
+			}
+			
+			//create rail
+			var curve3 = new THREE.SplineCurve3( [
+				new THREE.Vector3( 0, -0.95, 0),
+				new THREE.Vector3( 0, (hightS + 2)*2 +0.2, -3.8)
+			] );
+			
+			var handleRailGeometry = new THREE.TubeGeometry( curve3, 64, 0.25, 12, false)  //path, segment, spindulys, radius segments, closed
+			var handleRailMaterial = new THREE.MeshPhongMaterial({color: 0xd0d0d0});
+			
+			for (i = 1; i < options.stairsNmbr - 2; i++) { 
+				if (i%2 ==1){
+					var handleRail = new THREE.Mesh(handleRailGeometry, handleRailMaterial);
+					handleRail.position.z = (-1.5 * i) + depth_sup + 1.3 + options.position.z;
+					handleRail.position.y = (hightS + 2)*3 + (hightS + 2)*i -0.3;
+					handleRail.position.x = -2.2- width_sup + options.position.x;
+					scene.add(handleRail);
+				}
+			}
+		}
+
+      
+        // position and point the camera to the center of the scene
+        camera.position.x = -30;
+        camera.position.y = 40;
+        camera.position.z = 30;
+        camera.lookAt(scene.position);
+
+        // add spotlight for the shadows
+        var spotLight = new THREE.SpotLight( 0xffffff );
+        spotLight.position.set( -40, 60, -10 );
+        spotLight.castShadow = true;
+        scene.add( spotLight );
+		
+		//const light = new THREE.AmbientLight( 0x404040 );
+		//light.castShadow = true;
+		//scene.add( light );
+		
+		
+		var gui = new dat.GUI();
+		var folder = gui.addFolder('Stairs options');
+		
+		folder.add(options,'stairsNmbr',1,20).name('Number of stairs').listen();
+		folder.add(options,'curve',0,360).name('Curve of stairs').listen();
+		folder.add(options.position,'x',-10,10).name('Curve center x').listen();
+		folder.add(options.position,'z',-10,10).name('Curve center z').listen();
+		
+		folder.open();	
+		
+		
+
+
+        // add the output of the renderer to the html element
+        $("#WebGL-output").append(renderer.domElement);
+		var controls = new THREE.TrackballControls( camera, renderer.domElement );   		
+		render();
+ 
+        function render() {
+        // render
+		renderer.render( scene, camera );
+		requestAnimationFrame( render );
+		camera.updateMatrixWorld();
+		Stairs();
+		controls.update(); 
+		}
+		
+    });
+
+
+
+</script>
+</body>
+</html>

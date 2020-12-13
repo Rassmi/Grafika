@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+    <title>Trečios pirmas</title>
+    <script type="text/javascript" src="../libs/three.js"></script>
+    <script type="text/javascript" src="../libs/jquery-1.9.0.js"></script>
+    <script type="text/javascript" src="../libs/stats.js"></script>
+    <script type="text/javascript" src="../libs/dat.gui.js"></script>
+    <script type="text/javascript" src="../libs/ConvexGeometry.js"></script>
+    <style>
+        body {
+            /* set margin to 0 and overflow to hidden, to go fullscreen */
+            margin: 0;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+
+<div id="Stats-output">
+</div>
+<!-- Div which will hold the Output -->
+<div id="WebGL-output">
+</div>
+
+<!-- Javascript code that runs our Three.js examples -->
+<script type="text/javascript">
+
+    // once everything is loaded, we run our Three.js stuff.
+    $(function () {
+
+        var stats = initStats();
+        var pointsGroup;
+        var cone;
+
+        var h = 10;
+        var R = 4;
+
+        // create a scene, that will hold all our elements such as objects, cameras and lights.
+        var scene = new THREE.Scene();
+
+        // create a camera, which defines where we're looking at.
+        var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+
+        // create a render and set the size
+        var webGLRenderer = new THREE.WebGLRenderer();
+        webGLRenderer.setClearColorHex(0xEEEEEE, 1.0);
+        webGLRenderer.setSize(window.innerWidth, window.innerHeight);
+        webGLRenderer.shadowMapEnabled = true;
+
+        function getRandomInt(min, max) {
+            min = Math.ceil(min);
+            max = Math.floor(max);
+            return Math.floor(Math.random() * (max - min) + min); //The maximum is exclusive and the minimum is inclusive
+        }
+
+        function generateConePoints(h, R, pointCount){
+            var points = [];
+            for (var i = 0; i < pointCount; i++) {
+                var x = getRandomInt(-R, R);
+                var y = getRandomInt(-h / 2, h / 2);
+                var z = getRandomInt(-R, R);
+
+                if (x ** 2 - (R**2) <= -(z**2)) {
+                    points.push(new THREE.Vector3(x, y, z));
+                } else {
+                    i--;
+                    continue;
+                }
+
+
+            }
+            return points;
+        }
+
+        function createPointGeometry(points){
+            const spGroup = new THREE.Object3D();
+            const material = new THREE.MeshBasicMaterial({ color: 0xff00ff, transparent: false });
+            points.forEach(function (point) {
+                var spGeom = new THREE.SphereGeometry(0.2);
+                var spMesh = new THREE.Mesh(spGeom, material);
+                spMesh.position = point;
+                spGroup.add(spMesh);
+            });
+            return spGroup;
+        }
+
+        function createGeometry(){
+            // const geo = new THREE.CubeGeometry(10, 10, 10);
+            var points = generateConePoints(h, R, 200);
+            pointsGroup = createPointGeometry(points);
+            scene.add(pointsGroup);
+            const geo = new THREE.ConvexGeometry(points);
+            // const geo = new THREE.CylinderGeometry(R, R, h, 8);
+
+            return geo;
+        }
+
+        function addUVs(geometry){
+            geometry.faceVertexUvs[0] = [];
+            const faces = geometry.faces;
+
+            for (var i = 0; i < faces.length; i++) {
+
+                var ve1 = geometry.vertices[faces[i].a],
+                    ve2 = geometry.vertices[faces[i].b],
+                    ve3 = geometry.vertices[faces[i].c];
+
+                var v1 = ve1.y / h + 0.5;
+                    v2 = ve2.y / h + 0.5;
+                    v3 = ve3.y / h + 0.5;
+                var u1 = ((Math.atan2(ve1.x, ve1.z) + Math.PI) / (Math.PI * 2))
+                    u2 = ((Math.atan2(ve2.x, ve2.z) + Math.PI) / (Math.PI * 2))
+                    u3 = ((Math.atan2(ve3.x, ve3.z) + Math.PI) / (Math.PI * 2))
+
+
+                    console.log("U:" + u1 + ", " + u2 + ", " + u3);
+                    console.log("V:" + v1 + ", " + v2 + ", " + v3);
+                    console.log("X:" + ve1.x + ", " + ve2.x + ", " + ve3.x);
+                    console.log("Y:" + ve1.y + ", " + ve2.y + ", " + ve3.y);
+                    console.log("Z:" + ve1.z + ", " + ve2.z + ", " + ve3.z);
+
+                    if(Math.abs(u1-u2) >= 0.3 && Math.abs(u1 - u3) >= 0.3){
+                        u1 >= 0.3 ? u1 -= 1 : u1 += 1;
+                    }
+                        
+                    if(Math.abs(u2-u1) >= 0.3 && Math.abs(u2 - u3) >= 0.3){
+                        u2 >= 0.3 ? u2 -= 1 : u2 += 1;
+                    }
+                        
+                    if(Math.abs(u3-u1) >= 0.3 && Math.abs(u3 - u2) >= 0.3){
+                        u3 >= 0.3 ? u3 -= 1 : u3 += 1;
+                    }
+                        
+
+                geometry.faceVertexUvs[0][i] = ([
+                    new THREE.Vector2(u1, v1),
+                    new THREE.Vector2(u2, v2),
+                    new THREE.Vector2(u3, v3)
+                ]);
+            }
+            geometry.uvsNeedUpdate = true;
+        }
+
+        function addToScene(){
+            var geo = createGeometry();
+            addUVs(geo);
+            cone = createMesh(geo, "chess5.jpg");
+            scene.add(cone);
+            console.log(cone.geometry.faceVertexUvs);
+        }
+
+        addToScene();
+
+        // position and point the camera to the center of the scene
+        camera.position.x = 00;
+        camera.position.y = 12;
+        camera.position.z = 28;
+        camera.lookAt(new THREE.Vector3(0, 0, 0));
+
+        var ambiLight = new THREE.AmbientLight(0x141414)
+        scene.add(ambiLight);
+
+        var light = new THREE.DirectionalLight();
+        light.position.set(0, 30, 20);
+        scene.add(light);
+
+        // add the output of the renderer to the html element
+        $("#WebGL-output").append(webGLRenderer.domElement);
+
+        // call the render function
+        var step = 0;
+
+
+        // setup the control gui
+        var controls = new function () {
+            // we need the first child, since it's a multimaterial
+
+            this.redraw = function () {
+                scene.remove(pointsGroup);
+                scene.remove(cone);
+                addToScene();
+            };
+
+        }
+
+        var gui = new dat.GUI();
+        gui.add(controls, 'redraw');
+
+        render();
+
+        function createMesh(geom, imageFile) {
+			const loader = new THREE.TextureLoader();
+			loader.crossOrigin = '';
+			var texture;
+			const mapOverlay = loader.load("https://upload.wikimedia.org/wikipedia/commons/d/d5/Chess_Board.svg", function (result) {
+				texture = result
+				console.log(texture)
+				}, 
+				function (err) {
+				console.log(err);
+				});
+		
+			THREE.ImageUtils.crossOrigin = '';
+            var texture = THREE.ImageUtils.loadTexture("../assets/textures/general/" + imageFile)
+            var mat = new THREE.MeshPhongMaterial();
+            mat.map = texture;
+
+            var mesh = new THREE.Mesh(geom, mat);
+            return mesh;
+        }
+
+        function render() {
+            stats.update();
+
+            cone.rotation.y = step += 0.01;
+            // cone.rotation.x = step;
+            pointsGroup.rotation.y = step;
+            // pointsGroup.rotation.x = step;
+
+            // render using requestAnimationFrame
+            requestAnimationFrame(render);
+            webGLRenderer.render(scene, camera);
+        }
+
+        function initStats() {
+
+            var stats = new Stats();
+            stats.setMode(0); // 0: fps, 1: ms
+
+            // Align top-left
+            stats.domElement.style.position = 'absolute';
+            stats.domElement.style.left = '0px';
+            stats.domElement.style.top = '0px';
+
+            $("#Stats-output").append(stats.domElement);
+
+            return stats;
+        }
+    });
+
+
+</script>
+</body>
+</html>
